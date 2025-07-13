@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDN Middleware - Network Topology Dashboard</title>
+    
+    <!-- External Dependencies -->
+    <script src="https://unpkg.com/cytoscape@3.26.0/dist/cytoscape.min.js"></script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="src/styles/main.css">
+    <link rel="stylesheet" href="src/styles/components.css">
+    <link rel="stylesheet" href="src/styles/terminal.css">
+    <link rel="stylesheet" href="src/styles/responsive.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🌐</text></svg>">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="header-title">
+                    <span class="header-icon">🌐</span>
+                    SDN Middleware Dashboard
+                </h1>
+                <div class="header-subtitle">Network Topology Visualization</div>
+            </div>
+            <div class="header-right">
+                <div class="connection-status" id="connectionStatus">
+                    <span class="status-indicator" id="statusIndicator"></span>
+                    <span class="status-text" id="statusText">Connecting...</span>
+                </div>
+                <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h3>Controls</h3>
+                <button class="sidebar-toggle" id="sidebarToggle">
+                    <span>←</span>
+                </button>
+            </div>
+            
+            <!-- Search and Filters -->
+            <div class="control-section">
+                <h4>Search & Filter</h4>
+                <div class="search-container">
+                    <input type="text" id="searchInput" placeholder="Search nodes..." class="search-input">
+                    <button class="search-clear" id="searchClear">×</button>
+                </div>
+                
+                <div class="filter-group">
+                    <label class="filter-label">
+                        <input type="checkbox" id="showSwitches" checked>
+                        <span>Switches</span>
+                        <span class="count" id="switchCount">0</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" id="showHosts" checked>
+                        <span>Hosts</span>
+                        <span class="count" id="hostCount">0</span>
+                    </label>
+                    <label class="filter-label">
+                        <input type="checkbox" id="showLinks" checked>
+                        <span>Links</span>
+                        <span class="count" id="linkCount">0</span>
+                    </label>
+                </div>
+            </div>
+            
+            <!-- Layout Controls -->
+            <div class="control-section">
+                <h4>Layout</h4>
+                <select id="layoutSelect" class="layout-select">
+                    <option value="cose-bilkent">Force-directed</option>
+                    <option value="grid">Grid</option>
+                    <option value="circle">Circle</option>
+                    <option value="breadthfirst">Hierarchical</option>
+                </select>
+                <button class="btn btn-secondary" id="resetLayout">Reset Layout</button>
+            </div>
+            
+            <!-- Statistics -->
+            <div class="control-section">
+                <h4>Statistics</h4>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-label">OpenFlow Switches</span>
+                        <span class="stat-value" id="ofSwitchCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">P4Runtime Switches</span>
+                        <span class="stat-value" id="p4SwitchCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Total Hosts</span>
+                        <span class="stat-value" id="totalHostCount">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Active Links</span>
+                        <span class="stat-value" id="activeLinkCount">0</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="control-section">
+                <h4>Actions</h4>
+                <button class="btn btn-primary" id="refreshTopology">Refresh Topology</button>
+                <button class="btn btn-secondary" id="exportTopology">Export JSON</button>
+                <button class="btn btn-secondary" id="exportImage">Export PNG</button>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <div class="content-area">
+            <!-- Graph Container -->
+            <div class="graph-container">
+                <div class="graph-wrapper">
+                    <div id="cy" class="graph-canvas"></div>
+                    <div class="graph-overlay">
+                        <div class="loading-spinner" id="loadingSpinner">
+                            <div class="spinner"></div>
+                            <span>Loading topology...</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mini-map -->
+                <div class="minimap-container" id="minimapContainer">
+                    <div class="minimap-header">
+                        <span>Overview</span>
+                        <button class="minimap-toggle" id="minimapToggle">×</button>
+                    </div>
+                    <div id="minimap" class="minimap"></div>
+                </div>
+            </div>
+
+            <!-- Terminal Panel -->
+            <div class="terminal-container" id="terminalContainer">
+                <!-- Terminal will be dynamically created here -->
+            </div>
+        </div>
+    </main>
+
+    <!-- Node Detail Panel -->
+    <div class="detail-panel" id="detailPanel">
+        <div class="detail-header">
+            <h3 id="detailTitle">Node Details</h3>
+            <button class="detail-close" id="detailClose">×</button>
+        </div>
+        <div class="detail-content" id="detailContent">
+            <!-- Content will be populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>

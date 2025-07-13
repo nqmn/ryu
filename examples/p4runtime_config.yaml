@@ -1,0 +1,126 @@
+# Example configuration for P4Runtime support in Ryu Middleware
+# This configuration demonstrates how to set up both OpenFlow and P4Runtime
+# backends for a mixed SDN environment
+
+middleware:
+  # Mininet configuration
+  mininet_enabled: true
+  mininet_cleanup_on_exit: true
+  
+  # Traffic generation configuration
+  traffic_tools: ["hping3", "iperf3", "scapy"]
+  traffic_max_concurrent: 10
+  
+  # ML integration configuration
+  ml_enabled: false
+  ml_providers: []
+  
+  # WebSocket configuration
+  websocket_max_connections: 100
+  websocket_heartbeat_interval: 30
+  
+  # Monitoring configuration
+  monitoring_enabled: true
+  monitoring_interval: 5
+  stats_retention_time: 3600
+  
+  # SDN Backend configuration
+  sdn_backends:
+    # OpenFlow backend (traditional Ryu controller)
+    openflow:
+      enabled: true
+      controller_host: "localhost"
+      controller_port: 6653
+      
+    # P4Runtime backend (for P4-programmable switches)
+    p4runtime:
+      enabled: true
+      connection_timeout: 30
+      switches:
+        # BMv2 simple_switch_grpc instance
+        - device_id: 1
+          address: "localhost:50051"
+          pipeline: "./examples/p4/basic_forwarding.json"
+          p4info: "./examples/p4/basic_forwarding.p4info"
+          description: "BMv2 switch for basic L2 forwarding"
+          
+        # Tofino switch (example)
+        - device_id: 2
+          address: "192.168.1.100:50052"
+          pipeline: "./examples/p4/advanced_routing.json"
+          p4info: "./examples/p4/advanced_routing.p4info"
+          description: "Tofino switch for advanced routing"
+          
+        # Another BMv2 instance
+        - device_id: 3
+          address: "localhost:50053"
+          pipeline: "./examples/p4/basic_forwarding.json"
+          p4info: "./examples/p4/basic_forwarding.p4info"
+          description: "Second BMv2 switch"
+  
+  # P4Runtime specific configuration
+  p4runtime_enabled: true
+  p4runtime_pipeline_directory: "./examples/p4/pipelines"
+  p4runtime_connection_timeout: 30
+
+# P4 Pipeline configurations
+p4runtime:
+  enabled: true
+  pipeline_directory: "./examples/p4/pipelines"
+  
+  # Pre-registered pipelines
+  pipelines:
+    - name: "basic_forwarding"
+      version: "1.0.0"
+      description: "Basic L2 forwarding with learning"
+      p4info_path: "./examples/p4/basic_forwarding.p4info"
+      config_path: "./examples/p4/basic_forwarding.json"
+      
+    - name: "advanced_routing"
+      version: "2.0.0"
+      description: "Advanced L3 routing with ACLs"
+      p4info_path: "./examples/p4/advanced_routing.p4info"
+      config_path: "./examples/p4/advanced_routing.json"
+      
+    - name: "load_balancer"
+      version: "1.5.0"
+      description: "Load balancing with consistent hashing"
+      p4info_path: "./examples/p4/load_balancer.p4info"
+      config_path: "./examples/p4/load_balancer.json"
+
+# Logging configuration
+logging:
+  version: 1
+  disable_existing_loggers: false
+  
+  formatters:
+    standard:
+      format: '%(asctime)s [%(levelname)s] %(name)s: %(message)s'
+      
+  handlers:
+    console:
+      class: logging.StreamHandler
+      level: INFO
+      formatter: standard
+      stream: ext://sys.stdout
+      
+    file:
+      class: logging.FileHandler
+      level: DEBUG
+      formatter: standard
+      filename: middleware.log
+      
+  loggers:
+    ryu.app.middleware:
+      level: DEBUG
+      handlers: [console, file]
+      propagate: false
+      
+    ryu.app.middleware.p4runtime:
+      level: DEBUG
+      handlers: [console, file]
+      propagate: false
+      
+  root:
+    level: INFO
+    handlers: [console]

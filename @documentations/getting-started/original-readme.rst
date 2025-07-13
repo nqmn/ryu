@@ -32,7 +32,7 @@ Installing Ryu is quite easy::
 
 If you prefer to install Ryu from the source code::
 
-   % git clone https://github.com/faucetsdn/ryu.git
+   % git clone https://github.com/nqmn/ryu.git
    % cd ryu; pip install .
 
 If you want to write your Ryu application, have a look at
