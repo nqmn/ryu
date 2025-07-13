@@ -112,7 +112,7 @@ class MiddlewareAPI(app_manager.RyuApp):
     def _init_event_stream(self):
         """Initialize centralized event stream"""
         try:
-            event_stream_config = self.config.get('event_stream', {})
+            event_stream_config = self.config.event_stream
             self.event_stream = EventStream(event_stream_config)
             LOG.info("Event stream initialized")
         except Exception as e:
@@ -122,7 +122,7 @@ class MiddlewareAPI(app_manager.RyuApp):
     def _init_controller_manager(self):
         """Initialize multi-controller manager"""
         try:
-            controller_manager_config = self.config.get('controller_manager', {})
+            controller_manager_config = self.config.controller_manager
             self.controller_manager = ControllerManager(controller_manager_config, self.event_stream)
             LOG.info("Controller manager initialized")
         except Exception as e:

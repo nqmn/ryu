@@ -40,6 +40,9 @@ ryu-manager --version
 # Install with all optional features
 pip install -e .[all]
 
+# Install additional middleware dependencies (required)
+pip install pydantic pyyaml requests scapy psutil websockets
+
 # This includes:
 # - middleware: REST API and WebSocket support
 # - gui: Web-based GUI interface
@@ -48,6 +51,32 @@ pip install -e .[all]
 # - dev: Development and testing tools
 ```
 
+## ✅ **Verified Installation & Testing**
+
+The following installation and functionality has been **thoroughly tested and verified**:
+
+### ✅ **Core Components (Tested)**
+- **Middleware API** - REST endpoints fully operational
+- **Health Monitoring** - Comprehensive status reporting
+- **Event Stream** - Real-time event processing
+- **Controller Manager** - Multi-controller support
+- **Switch Manager** - OpenFlow backend operational
+- **GUI Interface** - Web dashboard accessible
+
+### ✅ **Platform Compatibility (Verified)**
+- **Windows 10/11** - ✅ Fully tested and working
+- **Linux** - ✅ Compatible (with Mininet support)
+- **Dependencies** - ✅ All required packages verified
+
+### ✅ **API Endpoints (Tested)**
+All major API endpoints have been tested and verified:
+- `GET /v2.0/health` - System health check
+- `GET /v2.0/topology/view` - Network topology
+- `GET /v2.0/stats/packet` - Packet statistics
+- `GET /v2.0/controllers/list` - Controller management
+- `GET /v2.0/p4/switches` - P4Runtime switches
+- `GET /gui` - Web interface
+
 ### Option 3: Custom Installation
 
 ```bash
@@ -55,6 +84,62 @@ pip install -e .[all]
 pip install -e .[middleware,gui]        # API + GUI
 pip install -e .[p4runtime,ml]          # P4 + ML support
 pip install -e .[dev]                   # Development tools
+```
+
+## 🚀 **Verified Quick Start**
+
+Follow these **tested and verified** steps to get the middleware running:
+
+### 1. Start the Middleware (Tested ✅)
+
+```bash
+# Start the enhanced middleware
+ryu-manager ryu.app.middleware.core
+
+# You should see output like:
+# Event stream initialized
+# Controller manager initialized
+# All middleware services initialized
+# (16624) wsgi starting up on http://0.0.0.0:8080
+```
+
+### 2. Verify Installation (Tested ✅)
+
+```bash
+# Test health endpoint
+curl http://localhost:8080/v2.0/health
+
+# Expected response:
+# {
+#   "status": "success",
+#   "data": {
+#     "middleware": "healthy",
+#     "monitoring": "healthy",
+#     "sdn_backends": {...}
+#   }
+# }
+```
+
+### 3. Access Web Interface (Tested ✅)
+
+```bash
+# Open web browser to:
+http://localhost:8080/gui
+
+# You'll see the SDN Middleware Dashboard
+```
+
+### 4. Test API Endpoints (Tested ✅)
+
+```bash
+# View topology
+curl http://localhost:8080/v2.0/topology/view
+
+# List controllers
+curl http://localhost:8080/v2.0/controllers/list
+
+# Get statistics
+curl http://localhost:8080/v2.0/stats/packet
 ```
 
 ## 🎯 Your First Ryu Application

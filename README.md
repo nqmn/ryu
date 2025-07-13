@@ -36,12 +36,31 @@ This is a **comprehensively modernized and enhanced version** of the Ryu SDN fra
 - **pip** (Python package manager)
 - **Mininet** (for network emulation) - Optional but recommended
 
+### Core Dependencies
+The following dependencies are automatically installed with Ryu:
+- `eventlet` - Asynchronous networking
+- `msgpack` - Binary serialization
+- `netaddr` - Network address manipulation
+- `oslo.config` - Configuration management
+- `ovs` - Open vSwitch bindings
+- `tinyrpc` - RPC library for WSGI functionality
+- `webob` - WSGI request/response objects
+
 ### Installation
 
 ```bash
 # Clone the repository
 git clone https://github.com/nqmn/ryu.git
 cd ryu
+
+# Create virtual environment
+python3 -m venv venv
+
+# Activate it
+source venv/bin/activate
+
+# Upgrade pip and install the package
+pip install --upgrade pip
 
 # Install with all features
 pip install -e .[all]
@@ -53,6 +72,9 @@ pip install -e .[middleware,gui,p4runtime]
 ### Basic Usage
 
 ```bash
+# Start Ryu with with simple switch
+ryu-manager ryu/app/simple_switch_13.py
+
 # Start Ryu with middleware
 ryu-manager ryu.app.middleware.core
 

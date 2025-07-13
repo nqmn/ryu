@@ -226,13 +226,13 @@ If you can't find what you're looking for in the documentation:
 1. **Search** this documentation thoroughly
 2. **Check** the [Examples](examples/) section for similar use cases
 3. **Review** the [API Reference](api-reference/) for technical details
-4. **Ask** in [GitHub Discussions](https://github.com/your-repo/ryu-enhanced/discussions)
+4. **Ask** in [GitHub Discussions](https://github.com/nqmn/ryu/discussions)
 
 ### 🐛 Technical Issues
 For bugs or technical problems:
 
 1. **Check** the [troubleshooting guide](getting-started/)
-2. **Search** [existing issues](https://github.com/your-repo/ryu-enhanced/issues)
+2. **Search** [existing issues](https://github.com/nqmn/ryu/issues)
 3. **Create** a new issue with detailed information
 
 ### 💬 Community Support
@@ -254,4 +254,4 @@ Choose your path based on your goals:
 
 **Welcome to the future of Software Defined Networking!** 🌟
 
-*This documentation is continuously updated. Last updated: January 2025*
+*This documentation is continuously updated. Last updated: July 2025*

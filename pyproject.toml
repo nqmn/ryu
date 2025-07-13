@@ -41,6 +41,7 @@ dependencies = [
     "ovs>=3.5.0",
     "packaging>=25.0",
     "routes>=2.5.1",
+    "tinyrpc>=1.1.0",
     "webob>=1.8.9",
 ]
 
@@ -168,6 +169,7 @@ module = [
     "oslo.*",
     "ovs.*",
     "routes.*",
+    "tinyrpc.*",
     "webob.*",
     "lxml.*",
     "ncclient.*",

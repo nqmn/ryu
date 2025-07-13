@@ -23,6 +23,7 @@ and AI/ML integration.
 
 import json
 import logging
+from datetime import datetime
 from typing import Dict, Any, Optional
 
 from ryu.app.wsgi import ControllerBase, Response, route
@@ -31,6 +32,14 @@ from ryu.lib import dpid as dpid_lib
 from .utils import ResponseFormatter, TopologyValidator, NetworkUtils
 
 LOG = logging.getLogger(__name__)
+
+
+class DateTimeEncoder(json.JSONEncoder):
+    """Custom JSON encoder for datetime objects"""
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.isoformat()
+        return super().default(obj)
 
 
 class MiddlewareRestController(ControllerBase):
@@ -62,21 +71,21 @@ class MiddlewareRestController(ControllerBase):
         """Create JSON response"""
         if isinstance(data, dict) and 'status' in data:
             # Already formatted response
-            body = json.dumps(data)
+            body = json.dumps(data, cls=DateTimeEncoder)
         else:
             # Wrap in success response
-            body = json.dumps(ResponseFormatter.success(data))
-        
+            body = json.dumps(ResponseFormatter.success(data), cls=DateTimeEncoder)
+
         return Response(
             content_type='application/json',
             body=body,
             status=status
         )
     
-    def _create_error_response(self, message: str, status: int = 400, 
+    def _create_error_response(self, message: str, status: int = 400,
                               error_code: str = "BAD_REQUEST") -> Response:
         """Create error response"""
-        body = json.dumps(ResponseFormatter.error(message, error_code))
+        body = json.dumps(ResponseFormatter.error(message, error_code), cls=DateTimeEncoder)
         return Response(
             content_type='application/json',
             body=body,
@@ -87,10 +96,16 @@ class MiddlewareRestController(ControllerBase):
         """Parse JSON request body"""
         try:
             if hasattr(req, 'body') and req.body:
-                return json.loads(req.body.decode('utf-8'))
+                body_str = req.body.decode('utf-8')
+                LOG.debug(f"Parsing JSON body: {body_str}")
+                return json.loads(body_str)
+            LOG.debug("No body found in request")
             return {}
         except json.JSONDecodeError as e:
             LOG.error(f"Failed to parse JSON body: {e}")
+            return None
+        except Exception as e:
+            LOG.error(f"Unexpected error parsing JSON body: {e}")
             return None
     
     # ========================================================================
@@ -959,7 +974,7 @@ class MiddlewareRestController(ControllerBase):
                 mapping.last_updated = datetime.utcnow()
 
             # Publish failover event
-            await controller_manager.event_stream.publish_event(
+            asyncio.run(controller_manager.event_stream.publish_event(
                 'manual_failover',
                 'controller_manager',
                 'system',
@@ -971,7 +986,7 @@ class MiddlewareRestController(ControllerBase):
                     'manual': True
                 },
                 priority=3
-            )
+            ))
 
             controller_manager.stats['failover_count'] += 1
 

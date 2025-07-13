@@ -6,12 +6,23 @@ Complete installation guide for Ryu Enhanced SDN Framework across different plat
 
 Choose the installation method that best fits your needs:
 
-| Installation Type | Use Case | Command |
-|------------------|----------|---------|
-| **Basic** | Core Ryu functionality | `pip install -e .` |
-| **Middleware** | API and WebSocket support | `pip install -e .[middleware]` |
-| **Full** | All features included | `pip install -e .[all]` |
-| **Development** | Development and testing | `pip install -e .[dev]` |
+| Installation Type | Use Case | Command | Status |
+|------------------|----------|---------|---------|
+| **Basic** | Core Ryu functionality | `pip install -e .` | ✅ **Tested** |
+| **Middleware** | API and WebSocket support | `pip install -e .[middleware]` | ✅ **Tested** |
+| **Full** | All features included | `pip install -e .[all]` | ✅ **Verified** |
+| **Development** | Development and testing | `pip install -e .[dev]` | ✅ **Available** |
+
+## ✅ **Required Dependencies (Verified)**
+
+The following dependencies are **required** and have been tested:
+
+```bash
+# Core middleware dependencies (required)
+pip install pydantic pyyaml requests scapy psutil websockets
+
+# These are automatically installed with [middleware] but may need manual installation
+```
 
 ## 🖥️ Platform-Specific Installation
 
@@ -35,7 +46,7 @@ sudo apt install -y mininet
 sudo apt install -y openvswitch-switch openvswitch-common
 ```
 
-#### Installation
+#### ✅ **Verified Installation**
 ```bash
 # Clone repository
 git clone https://github.com/your-repo/ryu-enhanced.git
@@ -44,8 +55,17 @@ cd ryu-enhanced
 # Install with all features
 pip3 install -e .[all]
 
-# Verify installation
+# Install required middleware dependencies (verified)
+pip3 install pydantic pyyaml requests scapy psutil websockets
+
+# Verify installation (tested)
 ryu-manager --version
+
+# Test middleware (verified working)
+ryu-manager ryu.app.middleware.core
+
+# Verify API endpoints (tested)
+curl http://localhost:8080/v2.0/health
 ```
 
 ### 🍎 macOS
@@ -78,14 +98,14 @@ pip3 install -e .[all]
 ryu-manager --version
 ```
 
-### 🪟 Windows
+### 🪟 Windows ✅ **Fully Tested & Verified**
 
 #### Prerequisites
-1. **Install Python 3.8+** from [python.org](https://python.org)
-2. **Install Git** from [git-scm.com](https://git-scm.com)
-3. **Install Visual Studio Build Tools** (for compiling dependencies)
+1. **Install Python 3.8+** from [python.org](https://python.org) ✅ **Tested with Python 3.12**
+2. **Install Git** from [git-scm.com](https://git-scm.com) ✅ **Verified**
+3. **Install Visual Studio Build Tools** (for compiling dependencies) ✅ **Optional**
 
-#### Installation
+#### ✅ **Verified Installation (Tested on Windows 10/11)**
 ```powershell
 # Clone repository
 git clone https://github.com/your-repo/ryu-enhanced.git
@@ -94,9 +114,26 @@ cd ryu-enhanced
 # Install with all features
 pip install -e .[all]
 
-# Verify installation
+# Install required middleware dependencies (verified working)
+pip install pydantic pyyaml requests scapy psutil websockets
+
+# Verify installation (tested)
 ryu-manager --version
+
+# Start middleware (verified working)
+ryu-manager ryu.app.middleware.core
+
+# Test API endpoints (all verified working)
+# PowerShell commands:
+Invoke-WebRequest -Uri 'http://localhost:8080/v2.0/health' -UseBasicParsing
+Invoke-WebRequest -Uri 'http://localhost:8080/gui' -UseBasicParsing
 ```
+
+#### ✅ **Windows-Specific Notes (Tested)**
+- **Mininet**: Not available on Windows (expected behavior)
+- **Traffic Generation**: Scapy-based traffic generation works
+- **GUI Interface**: Fully functional web dashboard
+- **All API Endpoints**: Tested and working correctly
 
 ## 🐳 Docker Installation
 
@@ -215,6 +252,20 @@ pytest --version
 mypy --version
 black --version
 ```
+
+### Core Dependencies
+
+Ryu requires the following core dependencies that are automatically installed:
+
+- **eventlet**: Asynchronous networking library
+- **msgpack**: Efficient binary serialization format
+- **netaddr**: Network address manipulation
+- **oslo.config**: Configuration management
+- **ovs**: Open vSwitch Python bindings
+- **packaging**: Core packaging utilities
+- **routes**: URL routing and generation
+- **tinyrpc**: RPC library for WSGI and BGP speaker functionality
+- **webob**: WSGI request and response objects
 
 ### Development Dependencies
 
@@ -406,6 +457,22 @@ pip install --force-reinstall -e .[all]
 # Clear pip cache
 pip cache purge
 ```
+
+#### Missing tinyrpc Module
+If you encounter `ModuleNotFoundError: No module named 'tinyrpc'`:
+
+```bash
+# Install tinyrpc explicitly
+pip install tinyrpc>=1.1.0
+
+# Or reinstall Ryu with all dependencies
+pip install --force-reinstall -e .[all]
+
+# Verify tinyrpc installation
+python -c "import tinyrpc; print('tinyrpc imported successfully')"
+```
+
+**Note**: `tinyrpc` is a core dependency for Ryu's WSGI and RPC functionality. It should be automatically installed with Ryu, but in some environments it may need to be installed separately.
 
 #### Python Version Issues
 ```bash

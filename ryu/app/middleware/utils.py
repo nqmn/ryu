@@ -83,6 +83,20 @@ class MiddlewareConfig:
     p4runtime_switches: List[Dict[str, Any]] = field(default_factory=list)
     p4runtime_pipeline_directory: str = "./pipelines"
     p4runtime_connection_timeout: int = 30
+
+    # Event stream configuration
+    event_stream: Dict[str, Any] = field(default_factory=lambda: {
+        'max_queue_size': 10000,
+        'max_history_size': 1000,
+        'auto_deactivate_failed_subscribers': True
+    })
+
+    # Controller manager configuration
+    controller_manager: Dict[str, Any] = field(default_factory=lambda: {
+        'health_check_interval': 30,
+        'health_check_timeout': 5,
+        'max_health_failures': 3
+    })
     
     def __post_init__(self):
         """Validate configuration after initialization"""
