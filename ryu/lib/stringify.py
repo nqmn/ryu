@@ -14,12 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import base64
 import inspect
-
-import six
 
 # Some arguments to __init__ is mangled in order to avoid name conflicts
 # with builtin names.
@@ -38,11 +34,19 @@ import six
 # 'len', 'property', 'set', 'type'
 # A bit more generic way is adopted
 
-_RESERVED_KEYWORD = dir(six.moves.builtins)
+import builtins
+_RESERVED_KEYWORD = dir(builtins)
 
-_mapdict = lambda f, d: dict([(k, f(v)) for k, v in d.items()])
-_mapdict_key = lambda f, d: dict([(f(k), v) for k, v in d.items()])
-_mapdict_kv = lambda f, d: dict([(k, f(k, v)) for k, v in d.items()])
+def _mapdict(f, d):
+    return dict([(k, f(v)) for k, v in d.items()])
+
+
+def _mapdict_key(f, d):
+    return dict([(f(k), v) for k, v in d.items()])
+
+
+def _mapdict_kv(f, d):
+    return dict([(k, f(k, v)) for k, v in d.items()])
 
 
 class TypeDescr(object):
@@ -53,23 +57,21 @@ class AsciiStringType(TypeDescr):
     @staticmethod
     def encode(v):
         # TODO: AsciiStringType data should probably be stored as
-        # text_type in class data.  This isinstance() check exists
+        # str in class data.  This isinstance() check exists
         # because OFPDescStats violates this.
-        if six.PY3 and isinstance(v, six.text_type):
+        if isinstance(v, str):
             return v
-        return six.text_type(v, 'ascii')
+        return str(v, 'ascii')
 
     @staticmethod
     def decode(v):
-        if six.PY3:
-            return v
-        return v.encode('ascii')
+        return v
 
 
 class Utf8StringType(TypeDescr):
     @staticmethod
     def encode(v):
-        return six.text_type(v, 'utf-8')
+        return str(v, 'utf-8')
 
     @staticmethod
     def decode(v):
@@ -175,7 +177,7 @@ class StringifyMixin(object):
         if len(dict_) != 1:
             return False
         k = list(dict_.keys())[0]
-        if not isinstance(k, (bytes, six.text_type)):
+        if not isinstance(k, (bytes, str)):
             return False
         for p in cls._class_prefixes:
             if k.startswith(p):
@@ -207,12 +209,11 @@ class StringifyMixin(object):
     @classmethod
     def _get_default_encoder(cls, encode_string):
         def _encode(v):
-            if isinstance(v, (bytes, six.text_type)):
-                if isinstance(v, six.text_type):
+            if isinstance(v, (bytes, str)):
+                if isinstance(v, str):
                     v = v.encode('utf-8')
                 json_value = encode_string(v)
-                if six.PY3:
-                    json_value = json_value.decode('ascii')
+                json_value = json_value.decode('ascii')
             elif isinstance(v, list):
                 json_value = [_encode(ve) for ve in v]
             elif isinstance(v, dict):
@@ -295,7 +296,7 @@ class StringifyMixin(object):
     @classmethod
     def _get_default_decoder(cls, decode_string):
         def _decode(json_value, **additional_args):
-            if isinstance(json_value, (bytes, six.text_type)):
+            if isinstance(json_value, (bytes, str)):
                 v = decode_string(json_value)
             elif isinstance(json_value, list):
                 v = [_decode(jv) for jv in json_value]

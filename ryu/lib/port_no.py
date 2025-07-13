@@ -17,8 +17,8 @@
 # string representation is in hex without '0x'
 
 _PORT_NO_LEN = 8
-_PORT_NO_FMT = '%0{0}x'.format(_PORT_NO_LEN)
-PORT_NO_PATTERN = r'[0-9a-f]{%d}' % _PORT_NO_LEN
+_PORT_NO_FMT = f'%0{_PORT_NO_LEN}x'
+PORT_NO_PATTERN = rf'[0-9a-f]{{{_PORT_NO_LEN}}}'
 
 
 def port_no_to_str(port_no):

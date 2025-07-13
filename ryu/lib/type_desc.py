@@ -16,8 +16,6 @@
 
 import base64
 
-import six
-
 from ryu.lib import addrconv
 
 
@@ -118,10 +116,7 @@ class UnknownType(TypeDescr):
 
     @staticmethod
     def to_user(data):
-        if six.PY3:
-            return base64.b64encode(data).decode('ascii')
-        else:
-            return base64.b64encode(data)
+        return base64.b64encode(data).decode('ascii')
 
     from_user = staticmethod(base64.b64decode)
 

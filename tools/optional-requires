@@ -1,5 +1,5 @@
-lxml!=3.7.0,>=2.3    # OF-Config
-ncclient  # OF-Config
-cryptography!=1.5.2  # Required by paramiko
-paramiko  # NETCONF, BGP speaker (SSH console)
-SQLAlchemy>=1.0.10,<1.1.0  # Zebra protocol service
+lxml>=4.6.0    # OF-Config
+ncclient>=0.6.0  # OF-Config
+cryptography>=3.0.0  # Required by paramiko
+paramiko>=2.7.0  # NETCONF, BGP speaker (SSH console)
+SQLAlchemy>=1.4.0,<2.0.0  # Zebra protocol service

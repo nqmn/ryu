@@ -950,7 +950,7 @@ class IPAddrPrefix(_UnlabelledAddrPrefix, _IPAddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr + '/{0}'.format(self.length)
+        return f"{self.addr}/{self.length}"
 
     @property
     def formatted_nlri_str(self):
@@ -967,7 +967,7 @@ class IP6AddrPrefix(_UnlabelledAddrPrefix, _IP6AddrPrefix):
 
     @property
     def prefix(self):
-        return self.addr + '/{0}'.format(self.length)
+        return f"{self.addr}/{self.length}"
 
     @property
     def formatted_nlri_str(self):

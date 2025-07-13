@@ -53,7 +53,7 @@ class GUIServerApp(app_manager.RyuApp):
 class GUIServerController(ControllerBase):
     def __init__(self, req, link, data, **config):
         super(GUIServerController, self).__init__(req, link, data, **config)
-        path = "%s/html/" % PATH
+        path = f"{PATH}/html/"
         self.static_app = DirectoryApp(path)
 
     @route('topology', '/{filename:[^/]*}')

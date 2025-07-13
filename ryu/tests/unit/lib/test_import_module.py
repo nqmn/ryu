@@ -15,7 +15,6 @@
 # limitations under the License.
 
 import unittest
-from nose.tools import eq_
 
 from ryu.utils import import_module
 
@@ -35,32 +34,32 @@ class Test_import_module(unittest.TestCase):
 
     def test_import_module_with_same_basename(self):
         aaa = import_module('ryu.tests.unit.lib.test_mod.aaa.mod')
-        eq_("this is aaa", aaa.name)
+        self.assertEqual("this is aaa", aaa.name)
         bbb = import_module('ryu.tests.unit.lib.test_mod.bbb.mod')
-        eq_("this is bbb", bbb.name)
+        self.assertEqual("this is bbb", bbb.name)
 
     def test_import_module_by_filename(self):
         ccc = import_module('./lib/test_mod/ccc/mod.py')
-        eq_("this is ccc", ccc.name)
+        self.assertEqual("this is ccc", ccc.name)
         ddd = import_module('./lib/test_mod/ddd/mod.py')
         # Note: When importing a module by filename, if module file name
         # is duplicated, import_module reload (override) a module instance.
-        eq_("this is ddd", ddd.name)
+        self.assertEqual("this is ddd", ddd.name)
 
     def test_import_same_module1(self):
         from ryu.tests.unit.lib.test_mod import eee as eee1
-        eq_("this is eee", eee1.name)
+        self.assertEqual("this is eee", eee1.name)
         eee2 = import_module('./lib/test_mod/eee.py')
-        eq_("this is eee", eee2.name)
+        self.assertEqual("this is eee", eee2.name)
 
     def test_import_same_module2(self):
         fff1 = import_module('./lib/test_mod/fff.py')
-        eq_("this is fff", fff1.name)
+        self.assertEqual("this is fff", fff1.name)
         fff2 = import_module('ryu.tests.unit.lib.test_mod.fff')
-        eq_("this is fff", fff2.name)
+        self.assertEqual("this is fff", fff2.name)
 
     def test_import_same_module3(self):
         ggg1 = import_module('./lib/test_mod/ggg.py')
-        eq_("this is ggg", ggg1.name)
+        self.assertEqual("this is ggg", ggg1.name)
         ggg2 = self._my_import('ryu.tests.unit.lib.test_mod.ggg')
-        eq_("this is ggg", ggg2.name)
+        self.assertEqual("this is ggg", ggg2.name)

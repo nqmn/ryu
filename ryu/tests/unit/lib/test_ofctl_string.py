@@ -26,7 +26,7 @@ class Test_OfctlString(unittest.TestCase):
     """
 
     def __init__(self, methodName):
-        print('init %s' % methodName)
+        print(f'init {methodName}')
         self.fake_dp_of15 = ProtocolDesc(ofproto_v1_5.OFP_VERSION)
         self.maxDiff = None
         super(Test_OfctlString, self).__init__(methodName)

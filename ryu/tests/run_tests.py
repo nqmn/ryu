@@ -1,35 +1,28 @@
 #!/usr/bin/env python
 
-
 import os
 import sys
-
-from nose import config
-from nose import core
+import subprocess
 
 sys.path.append(os.getcwd())
 sys.path.append(os.path.dirname(__file__))
 
 
-import ryu.tests.unit
-from ryu.tests.test_lib import run_tests
-
-
 if __name__ == '__main__':
-    exit_status = False
+    # Use pytest instead of nose
+    test_args = ['pytest', 'ryu/tests/unit']
 
-    # if a single test case was specified,
-    # we should only invoked the tests once
-    invoke_once = len(sys.argv) > 1
+    # Add any additional arguments passed to this script
+    if len(sys.argv) > 1:
+        test_args.extend(sys.argv[1:])
 
-    cwd = os.getcwd()
-    c = config.Config(stream=sys.stdout,
-                      env=os.environ,
-                      verbosity=int(os.environ.get('NOSE_VERBOSE', 3)),
-                      includeExe=True,
-                      traverseNamespace=True,
-                      plugins=core.DefaultPluginManager())
-    c.configureWhere(ryu.tests.unit.__path__)
+    # Set verbosity based on environment variable
+    verbosity = int(os.environ.get('PYTEST_VERBOSE', 1))
+    if verbosity > 1:
+        test_args.append('-v')
+    if verbosity > 2:
+        test_args.append('-vv')
 
-    exit_status = run_tests(c)
+    # Run pytest
+    exit_status = subprocess.call(test_args)
     sys.exit(exit_status)

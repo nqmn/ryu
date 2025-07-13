@@ -18,8 +18,8 @@
 # string representation is in hex without '0x'
 
 _DPID_LEN = 16
-_DPID_FMT = '%0{0}x'.format(_DPID_LEN)
-DPID_PATTERN = r'[0-9a-f]{%d}' % _DPID_LEN
+_DPID_FMT = f'%0{_DPID_LEN}x'
+DPID_PATTERN = rf'[0-9a-f]{{{_DPID_LEN}}}'
 
 
 def dpid_to_str(dpid):

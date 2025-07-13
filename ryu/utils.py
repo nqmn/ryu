@@ -18,28 +18,22 @@ import importlib
 import logging
 import os
 import sys
-
-import six
+from typing import Any, Union
 
 
 LOG = logging.getLogger('ryu.utils')
 
 
-def load_source(name, pathname):
+def load_source(name: str, pathname: str) -> Any:
     """
-    This function provides the backward compatibility for 'imp.load_source'
-    in Python 2.
+    Load a Python module from a source file.
 
     :param name: Name used to create or access a module object.
     :param pathname: Path pointing to the source file.
     :return: Loaded and initialized module.
     """
-    if six.PY2:
-        import imp
-        return imp.load_source(name, pathname)
-    else:
-        loader = importlib.machinery.SourceFileLoader(name, pathname)
-        return loader.load_module(name)
+    loader = importlib.machinery.SourceFileLoader(name, pathname)
+    return loader.load_module(name)
 
 
 def chop_py_suffix(p):
@@ -91,7 +85,15 @@ def _import_module_file(path):
         sys.path = original_path
 
 
-def import_module(modname):
+def import_module(modname: str) -> Any:
+    """
+    Import module with checking ImportError and AttributeError.
+    This function is used to import module which is used only when the
+    specified condition is satisfied.
+
+    :param modname: module name to import.
+    :return: imported module.
+    """
     if os.path.exists(modname):
         try:
             # Try to import module since 'modname' is a valid path to a file
@@ -112,17 +114,17 @@ def round_up(x, y):
     return ((x + y - 1) // y) * y
 
 
-def hex_array(data):
+def hex_array(data: Union[bytes, bytearray]) -> str:
     """
-    Convert six.binary_type or bytearray into array of hexes to be printed.
-    """
-    # convert data into bytearray explicitly
-    return ' '.join('0x%02x' % byte for byte in bytearray(data))
-
-
-def binary_str(data):
-    """
-    Convert six.binary_type or bytearray into str to be printed.
+    Convert bytes or bytearray into array of hexes to be printed.
     """
     # convert data into bytearray explicitly
-    return ''.join('\\x%02x' % byte for byte in bytearray(data))
+    return ' '.join(f'0x{byte:02x}' for byte in bytearray(data))
+
+
+def binary_str(data: Union[bytes, bytearray]) -> str:
+    """
+    Convert bytes or bytearray into str to be printed.
+    """
+    # convert data into bytearray explicitly
+    return ''.join(f'\\x{byte:02x}' for byte in bytearray(data))
