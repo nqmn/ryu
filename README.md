@@ -1,4 +1,4 @@
-# Ryu SDN Framework - Enhanced Edition
+# Ryu SDN Framework - 2025 Edition
 
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue.svg)](https://python.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
@@ -46,7 +46,7 @@ The following dependencies are automatically installed with Ryu:
 - `tinyrpc` - RPC library for WSGI functionality
 - `webob` - WSGI request/response objects
 
-### Installation
+### Basic Installation (Default)
 
 ```bash
 # Clone the repository
@@ -65,6 +65,11 @@ pip install --upgrade pip
 # Install with Core Ryu only (default)
 pip install -e .
 
+```
+
+### Features Installation
+
+```bash
 # Install with all features
 pip install -e .[all]
 
