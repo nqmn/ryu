@@ -55,8 +55,8 @@ def _register_cli_opts():
                     help='webapp listen port (default %s)' % DEFAULT_WSGI_PORT),
             ])
             _CLI_OPTS_REGISTERED = True
-        except cfg.ArgsAlreadyParsedError:
-            # Options already registered, continue
+        except Exception:
+            # Options already registered or other error, continue
             _CLI_OPTS_REGISTERED = True
 
 HEX_PATTERN = r'0x[0-9a-z]+'
@@ -367,17 +367,77 @@ class WSGIApplication(object):
 
 class WSGIServer(hub.WSGIServer):
     def __init__(self, application, **config):
-        _register_cli_opts()  # Ensure CLI options are registered
-        super(WSGIServer, self).__init__((CONF.wsapi_host, CONF.wsapi_port),
-                                         application, **config)
+        # Use default values if CLI options aren't available
+        host = getattr(CONF, 'wsapi_host', DEFAULT_WSGI_HOST)
+        port = getattr(CONF, 'wsapi_port', DEFAULT_WSGI_PORT)
+        super(WSGIServer, self).__init__((host, port), application, **config)
 
     def __call__(self):
         self.serve_forever()
 
 
 def start_service(app_mgr):
-    for instance in app_mgr.contexts.values():
-        if instance.__class__ == WSGIApplication:
-            return WSGIServer(instance)
+    # Handle both app_manager and RyuApp instances
+    if hasattr(app_mgr, 'contexts'):
+        # This is an app_manager
+        for instance in app_mgr.contexts.values():
+            if instance.__class__ == WSGIApplication:
+                return WSGIServer(instance)
+    else:
+        # This is a RyuApp instance, check if it has wsgi context
+        if hasattr(app_mgr, 'wsgi') and app_mgr.wsgi:
+            return WSGIServer(app_mgr.wsgi)
 
     return None
+
+
+# Simple Ryu app wrapper for running WSGI server directly
+from ryu.base import app_manager
+
+class WSGIApp(app_manager.RyuApp):
+    """Simple WSGI application wrapper for running WSGI server directly."""
+    
+    _CONTEXTS = {
+        'wsgi': WSGIApplication
+    }
+    
+    def __init__(self, *args, **kwargs):
+        # Extract the wsgi context from kwargs before calling super
+        self.wsgi = kwargs.get('wsgi')
+        super(WSGIApp, self).__init__(*args, **kwargs)
+        self.wsgi_server = None
+        self._server_thread = None
+        
+    def start(self):
+        super(WSGIApp, self).start()
+        
+        # Create WSGI server directly using the wsgi context
+        if self.wsgi:
+            # Use default values if CLI options aren't available
+            host = getattr(CONF, 'wsapi_host', DEFAULT_WSGI_HOST)
+            port = getattr(CONF, 'wsapi_port', DEFAULT_WSGI_PORT)
+            
+            self.wsgi_server = WSGIServer(self.wsgi)
+            self.logger.info("Starting WSGI server on %s:%s", host, port)
+            # Spawn the server in a greenthread and keep reference
+            self._server_thread = hub.spawn(self.wsgi_server)
+            # Start a background task to keep the app running
+            self._start_background_task()
+        else:
+            self.logger.error("Failed to start WSGI server - no WSGI context found")
+            
+    def stop(self):
+        if self.wsgi_server:
+            self.logger.info("Stopping WSGI server")
+            if self._server_thread:
+                self._server_thread.kill()
+        super(WSGIApp, self).stop()
+        
+    def _keep_running(self):
+        """Keep the app running by sleeping indefinitely."""
+        while True:
+            hub.sleep(60)  # Sleep for 1 minute intervals
+            
+    def _start_background_task(self):
+        """Start a background task to keep the app running."""
+        hub.spawn(self._keep_running)
