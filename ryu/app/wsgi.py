@@ -19,7 +19,6 @@ from types import MethodType
 
 from routes import Mapper
 from routes.util import URLGenerator
-import six
 from tinyrpc.server import RPCServer
 from tinyrpc.dispatch import RPCDispatcher
 from tinyrpc.dispatch import public as rpc_public
@@ -38,14 +37,27 @@ DEFAULT_WSGI_HOST = '0.0.0.0'
 DEFAULT_WSGI_PORT = 8080
 
 CONF = cfg.CONF
-CONF.register_cli_opts([
-    cfg.StrOpt(
-        'wsapi-host', default=DEFAULT_WSGI_HOST,
-        help='webapp listen host (default %s)' % DEFAULT_WSGI_HOST),
-    cfg.IntOpt(
-        'wsapi-port', default=DEFAULT_WSGI_PORT,
-        help='webapp listen port (default %s)' % DEFAULT_WSGI_PORT),
-])
+
+# CLI options registration moved to _register_cli_opts() function
+_CLI_OPTS_REGISTERED = False
+
+def _register_cli_opts():
+    """Register CLI options if not already registered."""
+    global _CLI_OPTS_REGISTERED
+    if not _CLI_OPTS_REGISTERED:
+        try:
+            CONF.register_cli_opts([
+                cfg.StrOpt(
+                    'wsapi-host', default=DEFAULT_WSGI_HOST,
+                    help='webapp listen host (default %s)' % DEFAULT_WSGI_HOST),
+                cfg.IntOpt(
+                    'wsapi-port', default=DEFAULT_WSGI_PORT,
+                    help='webapp listen port (default %s)' % DEFAULT_WSGI_PORT),
+            ])
+            _CLI_OPTS_REGISTERED = True
+        except cfg.ArgsAlreadyParsedError:
+            # Options already registered, continue
+            _CLI_OPTS_REGISTERED = True
 
 HEX_PATTERN = r'0x[0-9a-z]+'
 DIGIT_PATTERN = r'[1-9][0-9]*'
@@ -107,16 +119,29 @@ class WebSocketRegistrationWrapper(object):
 
 
 class _AlreadyHandledResponse(Response):
-    # XXX: Eventlet API should not be used directly.
-    # https://github.com/benoitc/gunicorn/pull/2581
-    from packaging import version
-    import eventlet
-    if version.parse(eventlet.__version__) >= version.parse("0.30.3"):
-        import eventlet.wsgi
-        _ALREADY_HANDLED = getattr(eventlet.wsgi, "ALREADY_HANDLED", None)
-    else:
-        from eventlet.wsgi import ALREADY_HANDLED
-        _ALREADY_HANDLED = ALREADY_HANDLED
+    # Handle eventlet ALREADY_HANDLED across different versions
+    _ALREADY_HANDLED = None
+    
+    def __init__(self, *args, **kwargs):
+        super(_AlreadyHandledResponse, self).__init__(*args, **kwargs)
+        if self._ALREADY_HANDLED is None:
+            self._init_already_handled()
+    
+    @classmethod
+    def _init_already_handled(cls):
+        """Initialize ALREADY_HANDLED constant for eventlet compatibility."""
+        try:
+            from packaging import version
+            import eventlet
+            if version.parse(eventlet.__version__) >= version.parse("0.30.3"):
+                import eventlet.wsgi
+                cls._ALREADY_HANDLED = getattr(eventlet.wsgi, "ALREADY_HANDLED", None)
+            else:
+                from eventlet.wsgi import ALREADY_HANDLED
+                cls._ALREADY_HANDLED = ALREADY_HANDLED
+        except (ImportError, AttributeError):
+            # Fallback for cases where eventlet structure changes
+            cls._ALREADY_HANDLED = []
 
     def __call__(self, environ, start_response):
         return self._ALREADY_HANDLED
@@ -183,7 +208,7 @@ class WebSocketServerTransport(ServerTransport):
         return context, message
 
     def send_reply(self, context, reply):
-        self.ws.send(six.text_type(reply))
+        self.ws.send(str(reply))
 
 
 class WebSocketRPCServer(RPCServer):
@@ -213,7 +238,7 @@ class WebSocketClientTransport(ClientTransport):
         self.queue = queue
 
     def send_message(self, message, expect_reply=True):
-        self.ws.send(six.text_type(message))
+        self.ws.send(str(message))
 
         if expect_reply:
             return self.queue.get()
@@ -231,10 +256,14 @@ class WebSocketRPCClient(RPCClient):
 
     def serve_forever(self):
         while True:
-            msg = self.ws.wait()
-            if msg is None:
+            try:
+                msg = self.ws.wait()
+                if msg is None:
+                    break
+                self.queue.put(msg)
+            except Exception:
+                # WebSocket disconnected or error occurred
                 break
-            self.queue.put(msg)
 
 
 class wsgify_hack(webob.dec.wsgify):
@@ -252,11 +281,21 @@ class WebSocketManager(object):
         self._connections.append(ws)
 
     def delete_connection(self, ws):
-        self._connections.remove(ws)
+        try:
+            self._connections.remove(ws)
+        except ValueError:
+            # Connection not in list, ignore
+            pass
 
     def broadcast(self, msg):
-        for connection in self._connections:
-            connection.send(msg)
+        # Create a copy of connections to avoid modification during iteration
+        connections_copy = self._connections[:]
+        for connection in connections_copy:
+            try:
+                connection.send(msg)
+            except Exception:
+                # Remove failed connection
+                self.delete_connection(connection)
 
 
 class WSGIApplication(object):
@@ -328,6 +367,7 @@ class WSGIApplication(object):
 
 class WSGIServer(hub.WSGIServer):
     def __init__(self, application, **config):
+        _register_cli_opts()  # Ensure CLI options are registered
         super(WSGIServer, self).__init__((CONF.wsapi_host, CONF.wsapi_port),
                                          application, **config)
 
