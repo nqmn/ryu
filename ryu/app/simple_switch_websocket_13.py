@@ -93,7 +93,7 @@ class SimpleSwitchWebSocketController(ControllerBase):
     @websocket('simpleswitch', url)
     def _websocket_handler(self, ws):
         simple_switch = self.simple_switch_app
-        simple_switch.logger.debug('WebSocket connected: %s', ws)
+        simple_switch.logger.debug(f'WebSocket connected: {ws}')
         rpc_server = WebSocketRPCServer(ws, simple_switch)
         rpc_server.serve_forever()
-        simple_switch.logger.debug('WebSocket disconnected: %s', ws)
+        simple_switch.logger.debug(f'WebSocket disconnected: {ws}')

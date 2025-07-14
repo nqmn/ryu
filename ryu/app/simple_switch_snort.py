@@ -13,8 +13,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import print_function
-
 import array
 
 from ryu.base import app_manager
@@ -34,7 +32,7 @@ class SimpleSwitchSnort(app_manager.RyuApp):
     _CONTEXTS = {'snortlib': snortlib.SnortLib}
 
     def __init__(self, *args, **kwargs):
-        super(SimpleSwitchSnort, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.snort = kwargs['snortlib']
         self.snort_port = 3
         self.mac_to_port = {}
@@ -69,7 +67,7 @@ class SimpleSwitchSnort(app_manager.RyuApp):
     def _dump_alert(self, ev):
         msg = ev.msg
 
-        print('alertmsg: %s' % ''.join(msg.alertmsg))
+        print(f'alertmsg: {"".join(msg.alertmsg)}')
 
         self.packet_print(msg.pkt)
 

@@ -31,7 +31,7 @@ class SimpleSwitchLacp13(simple_switch_13.SimpleSwitch13):
     _CONTEXTS = {'lacplib': lacplib.LacpLib}
 
     def __init__(self, *args, **kwargs):
-        super(SimpleSwitchLacp13, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.mac_to_port = {}
         self._lacp = kwargs['lacplib']
         self._lacp.add(

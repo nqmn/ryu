@@ -35,11 +35,11 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
         datapath = ev.datapath
         if ev.state == MAIN_DISPATCHER:
             if datapath.id not in self.datapaths:
-                self.logger.debug('register datapath: %016x', datapath.id)
+                self.logger.debug(f'register datapath: {datapath.id:016x}')
                 self.datapaths[datapath.id] = datapath
         elif ev.state == DEAD_DISPATCHER:
             if datapath.id in self.datapaths:
-                self.logger.debug('unregister datapath: %016x', datapath.id)
+                self.logger.debug(f'unregister datapath: {datapath.id:016x}')
                 del self.datapaths[datapath.id]
 
     def _monitor(self):
@@ -49,7 +49,7 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
             hub.sleep(10)
 
     def _request_stats(self, datapath):
-        self.logger.debug('send stats request: %016x', datapath.id)
+        self.logger.debug(f'send stats request: {datapath.id:016x}')
         ofproto = datapath.ofproto
         parser = datapath.ofproto_parser
 
@@ -72,11 +72,7 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
         for stat in sorted([flow for flow in body if flow.priority == 1],
                            key=lambda flow: (flow.match['in_port'],
                                              flow.match['eth_dst'])):
-            self.logger.info('%016x %8x %17s %8x %8d %8d',
-                             ev.msg.datapath.id,
-                             stat.match['in_port'], stat.match['eth_dst'],
-                             stat.instructions[0].actions[0].port,
-                             stat.packet_count, stat.byte_count)
+            self.logger.info(f'{ev.msg.datapath.id:016x} {stat.match["in_port"]:8x} {stat.match["eth_dst"]:17s} {stat.instructions[0].actions[0].port:8x} {stat.packet_count:8d} {stat.byte_count:8d}')
 
     @set_ev_cls(ofp_event.EventOFPPortStatsReply, MAIN_DISPATCHER)
     def _port_stats_reply_handler(self, ev):
@@ -89,7 +85,4 @@ class SimpleMonitor13(simple_switch_13.SimpleSwitch13):
                          '-------- -------- -------- '
                          '-------- -------- --------')
         for stat in sorted(body, key=attrgetter('port_no')):
-            self.logger.info('%016x %8x %8d %8d %8d %8d %8d %8d',
-                             ev.msg.datapath.id, stat.port_no,
-                             stat.rx_packets, stat.rx_bytes, stat.rx_errors,
-                             stat.tx_packets, stat.tx_bytes, stat.tx_errors)
+            self.logger.info(f'{ev.msg.datapath.id:016x} {stat.port_no:8x} {stat.rx_packets:8d} {stat.rx_bytes:8d} {stat.rx_errors:8d} {stat.tx_packets:8d} {stat.tx_bytes:8d} {stat.tx_errors:8d}')

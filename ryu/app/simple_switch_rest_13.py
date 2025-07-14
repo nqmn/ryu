@@ -34,7 +34,7 @@ class SimpleSwitchRest13(simple_switch_13.SimpleSwitch13):
     _CONTEXTS = {'wsgi': WSGIApplication}
 
     def __init__(self, *args, **kwargs):
-        super(SimpleSwitchRest13, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.switches = {}
         wsgi = kwargs['wsgi']
         wsgi.register(SimpleSwitchController,
@@ -42,7 +42,7 @@ class SimpleSwitchRest13(simple_switch_13.SimpleSwitch13):
 
     @set_ev_cls(ofp_event.EventOFPSwitchFeatures, CONFIG_DISPATCHER)
     def switch_features_handler(self, ev):
-        super(SimpleSwitchRest13, self).switch_features_handler(ev)
+        super().switch_features_handler(ev)
         datapath = ev.msg.datapath
         self.switches[datapath.id] = datapath
         self.mac_to_port.setdefault(datapath.id, {})
@@ -77,7 +77,7 @@ class SimpleSwitchRest13(simple_switch_13.SimpleSwitch13):
 class SimpleSwitchController(ControllerBase):
 
     def __init__(self, req, link, data, **config):
-        super(SimpleSwitchController, self).__init__(req, link, data, **config)
+        super().__init__(req, link, data, **config)
         self.simple_switch_app = data[simple_switch_instance_name]
 
     @route('simpleswitch', url, methods=['GET'],

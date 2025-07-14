@@ -49,10 +49,10 @@ def _register_cli_opts():
             CONF.register_cli_opts([
                 cfg.StrOpt(
                     'wsapi-host', default=DEFAULT_WSGI_HOST,
-                    help='webapp listen host (default %s)' % DEFAULT_WSGI_HOST),
+                    help=f'webapp listen host (default {DEFAULT_WSGI_HOST})'),
                 cfg.IntOpt(
                     'wsapi-port', default=DEFAULT_WSGI_PORT,
-                    help='webapp listen port (default %s)' % DEFAULT_WSGI_PORT),
+                    help=f'webapp listen port (default {DEFAULT_WSGI_PORT})'),
             ])
             _CLI_OPTS_REGISTERED = True
         except Exception:
@@ -102,7 +102,7 @@ class Response(webob_Response):
         super(Response, self).__init__(charset=charset, *args, **kwargs)
 
 
-class WebSocketRegistrationWrapper(object):
+class WebSocketRegistrationWrapper:
 
     def __init__(self, func, controller):
         self._controller = controller
@@ -168,7 +168,7 @@ def websocket(name, path):
     return _websocket
 
 
-class ControllerBase(object):
+class ControllerBase:
     special_vars = ['action', 'controller']
 
     def __init__(self, req, link, data, **config):
@@ -272,7 +272,7 @@ class wsgify_hack(webob.dec.wsgify):
         return super(wsgify_hack, self).__call__(environ, start_response)
 
 
-class WebSocketManager(object):
+class WebSocketManager:
 
     def __init__(self):
         self._connections = []
@@ -298,7 +298,7 @@ class WebSocketManager(object):
                 self.delete_connection(connection)
 
 
-class WSGIApplication(object):
+class WSGIApplication:
     def __init__(self, **config):
         self.config = config
         self.mapper = Mapper()
@@ -418,7 +418,7 @@ class WSGIApp(app_manager.RyuApp):
             port = getattr(CONF, 'wsapi_port', DEFAULT_WSGI_PORT)
             
             self.wsgi_server = WSGIServer(self.wsgi)
-            self.logger.info("Starting WSGI server on %s:%s", host, port)
+            self.logger.info(f"Starting WSGI server on {host}:{port}")
             # Spawn the server in a greenthread and keep reference
             self._server_thread = hub.spawn(self.wsgi_server)
             # Start a background task to keep the app running
