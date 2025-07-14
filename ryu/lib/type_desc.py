@@ -38,7 +38,7 @@ class IntDescr(TypeDescr):
     def from_user(self, i):
         binary = b''
         for _ in range(self.size):
-            binary = six.int2byte(i & 255) + binary
+            binary = bytes([i & 255]) + binary
             i //= 256
         return binary
 
@@ -85,7 +85,7 @@ class IntDescrMlt(TypeDescr):
         for i in li:
             b = b''
             for _ in range(self.length):
-                b = six.int2byte(i & 255) + b
+                b = bytes([i & 255]) + b
                 i //= 256
             binary += b
         return binary
