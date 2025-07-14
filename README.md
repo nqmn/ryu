@@ -16,25 +16,12 @@ This is a **comprehensively modernized and enhanced version** of the Ryu SDN fra
 - **🧪 Modern Testing**: Migrated from nose to pytest with comprehensive test coverage
 - **🏗️ Modern Project Structure**: Uses pyproject.toml and modern packaging standards
 
-### 🚀 Advanced Middleware System
-- **🌐 RESTful API**: Comprehensive REST API for network management
-- **⚡ WebSocket Streaming**: Real-time event streaming and monitoring
-- **🔄 Multi-Controller Support**: OpenFlow (Ryu) and P4Runtime controller management
-- **🤖 AI/ML Integration**: Plugin architecture for machine learning modules
-- **📊 Advanced Monitoring**: Flow statistics, port metrics, and network analytics
-
-### 🎮 Interactive Features
-- **🖥️ Web-based GUI**: Interactive topology visualization and management
-- **📺 Live Terminal**: Real-time network event monitoring with color coding
-- **🔧 Dynamic Configuration**: Runtime topology and flow management
-- **📈 Performance Analytics**: Comprehensive network performance metrics
-
 ## 🚀 Quick Start
 
 ### Prerequisites
 - **Python 3.8 or later**
 - **pip** (Python package manager)
-- **Mininet** (for network emulation) - Optional but recommended
+- **Mininet** (for network emulation) - run `sudo apt install mininet`
 
 ### Core Dependencies
 The following dependencies are automatically installed with Ryu:
@@ -89,6 +76,25 @@ ryu-manager ryu/app/simple_switch_13.py
 
 ```
 
+---
+
+## Additional Features (NEW!)
+
+If you want to test the advanced middleware capabilities, multi-controller support, and AI/ML integration, here it is.
+
+### 🚀 Advanced Middleware System (Optional)
+- **🌐 RESTful API**: Comprehensive REST API for network management
+- **⚡ WebSocket Streaming**: Real-time event streaming and monitoring
+- **🔄 Multi-Controller Support**: OpenFlow (Ryu) and P4Runtime controller management
+- **🤖 AI/ML Integration**: Plugin architecture for machine learning modules
+- **📊 Advanced Monitoring**: Flow statistics, port metrics, and network analytics
+
+### 🎮 Interactive Features (Optional)
+- **🖥️ Web-based GUI**: Interactive topology visualization and management
+- **📺 Live Terminal**: Real-time network event monitoring with color coding
+- **🔧 Dynamic Configuration**: Runtime topology and flow management
+- **📈 Performance Analytics**: Comprehensive network performance metrics
+
 ### Features Installation
 
 ```bash
@@ -109,9 +115,6 @@ pip install -e .[middleware,gui,p4runtime]
 ### Basic Usage
 
 ```bash
-# Start Ryu with with simple switch
-ryu-manager ryu/app/simple_switch_13.py
-
 # Start Ryu with middleware
 ryu-manager ryu.app.middleware.core
 
