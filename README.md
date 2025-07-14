@@ -76,7 +76,9 @@ ryu-manager ryu/app/simple_switch_13.py
 
 ```
 
-✉️ If you found any issues, do contact me!
+### Contact
+
+✉️ If you found any issues, do reach me!
 
 ---
 
