@@ -85,6 +85,8 @@ middleware = [
     "uvicorn>=0.24.0",
     "websockets>=12.0",
 ]
+# GUI web interface (uses base webob, no extra deps needed)
+gui = []
 # P4Runtime support for programmable switches
 p4runtime = [
     "grpcio>=1.59.0",
@@ -94,7 +96,7 @@ p4runtime = [
 ]
 # All optional dependencies
 all = [
-    "ryu[of-config,netconf,bgp-ssh,database,middleware,p4runtime]",
+    "ryu[of-config,netconf,bgp-ssh,database,middleware,gui,p4runtime]",
 ]
 
 [project.urls]

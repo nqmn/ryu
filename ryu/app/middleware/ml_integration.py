@@ -25,7 +25,12 @@ import time
 import requests
 import threading
 from typing import Dict, Any, List, Optional
-from threading import Lock
+try:
+    import eventlet
+    from eventlet import semaphore
+    Lock = semaphore.Semaphore
+except ImportError:
+    from threading import Lock
 
 from .utils import MiddlewareConfig, ResponseFormatter
 

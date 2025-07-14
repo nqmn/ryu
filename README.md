@@ -62,11 +62,21 @@ source venv/bin/activate
 # Upgrade pip and install the package
 pip install --upgrade pip
 
+# Install with Core Ryu only (default)
+pip install -e .
+
 # Install with all features
 pip install -e .[all]
 
+# Or install individual features  
+  pip install -e .[middleware]    # Enhanced SDN middleware
+  pip install -e .[gui]           # Web GUI
+  pip install -e .[p4runtime]     # P4Runtime support
+  pip install -e .[dev]           # Development tools
+
 # Or install with specific features
 pip install -e .[middleware,gui,p4runtime]
+
 ```
 
 ### Basic Usage

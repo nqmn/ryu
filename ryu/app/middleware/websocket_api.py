@@ -26,7 +26,12 @@ import time
 import asyncio
 from socket import error as SocketError
 from typing import Dict, Any, List, Optional, Set
-from threading import Lock
+try:
+    import eventlet
+    from eventlet import semaphore
+    Lock = semaphore.Semaphore
+except ImportError:
+    from threading import Lock
 
 from tinyrpc.exc import InvalidReplyError
 

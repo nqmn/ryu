@@ -26,7 +26,12 @@ import logging
 import threading
 from typing import Dict, Any, List, Optional
 from collections import defaultdict, deque
-from threading import Lock
+try:
+    import eventlet
+    from eventlet import semaphore
+    Lock = semaphore.Semaphore
+except ImportError:
+    from threading import Lock
 
 from ryu.controller import dpset
 from ryu.controller import ofp_event

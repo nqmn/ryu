@@ -113,6 +113,7 @@ class MiddlewareRestController(ControllerBase):
     # ========================================================================
     
     @route('middleware', '/v2.0/topology/view', methods=['GET'])
+    @route('middleware', '/topology/view', methods=['GET'])  # Backward compatibility
     def get_topology(self, req, **kwargs):
         """Get current topology information"""
         try:
@@ -183,13 +184,28 @@ class MiddlewareRestController(ControllerBase):
     # ========================================================================
     
     @route('middleware', '/v2.0/host/list', methods=['GET'])
+    @route('middleware', '/host/list', methods=['GET'])  # Also handle non-versioned path
     def list_hosts(self, req, **kwargs):
         """List all hosts in the topology"""
         try:
-            hosts = self.mininet_bridge.list_hosts()
-            return self._create_response(hosts)
+            LOG.info("Host list endpoint called")
+            result = self.mininet_bridge.list_hosts()
+            LOG.info(f"Mininet bridge returned: {result} (type: {type(result)})")
+            
+            # Simple approach - if it's already formatted, use it directly
+            if isinstance(result, dict) and 'status' in result:
+                LOG.info("Returning ResponseFormatter result as JSON")
+                body = json.dumps(result, cls=DateTimeEncoder)
+                return Response(content_type='application/json', body=body, status=200)
+            else:
+                # Fallback
+                LOG.info("Using fallback response creation")
+                return self._create_response(result)
+                
         except Exception as e:
             LOG.error(f"Failed to list hosts: {e}")
+            import traceback
+            LOG.error(f"Traceback: {traceback.format_exc()}")
             return self._create_error_response(str(e), 500, "HOST_ERROR")
     
     @route('middleware', '/v2.0/host/ping', methods=['POST'])
@@ -232,16 +248,27 @@ class MiddlewareRestController(ControllerBase):
             
             result = self.traffic_generator.generate_traffic(traffic_spec)
             
-            if result.get('success'):
-                return self._create_response(result, 201)
+            # Handle ResponseFormatter results properly
+            if isinstance(result, dict) and 'status' in result:
+                if result['status'] == 'success':
+                    return self._create_response(result, 201)
+                else:
+                    # Return error response with appropriate HTTP status code
+                    return self._create_response(result, 400)
             else:
-                return self._create_error_response(
-                    result.get('error', 'Failed to generate traffic'),
-                    500, "TRAFFIC_ERROR"
-                )
+                # Fallback for legacy result format
+                if isinstance(result, dict) and result.get('success'):
+                    return self._create_response(result, 201)
+                else:
+                    return self._create_error_response(
+                        result.get('error', 'Failed to generate traffic') if isinstance(result, dict) else str(result),
+                        400, "TRAFFIC_ERROR"
+                    )
                 
         except Exception as e:
             LOG.error(f"Failed to generate traffic: {e}")
+            import traceback
+            LOG.error(f"Traceback: {traceback.format_exc()}")
             return self._create_error_response(str(e), 500, "TRAFFIC_ERROR")
     
     @route('middleware', '/v2.0/traffic/status', methods=['GET'])
@@ -293,6 +320,7 @@ class MiddlewareRestController(ControllerBase):
             return self._create_error_response(str(e), 500, "STATS_ERROR")
 
     @route('middleware', '/v2.0/stats/packet', methods=['GET'])
+    @route('middleware', '/stats/packet', methods=['GET'])  # Backward compatibility
     def get_packet_stats(self, req, **kwargs):
         """Get packet-in statistics"""
         try:
@@ -303,6 +331,7 @@ class MiddlewareRestController(ControllerBase):
             return self._create_error_response(str(e), 500, "STATS_ERROR")
 
     @route('middleware', '/v2.0/stats/topology', methods=['GET'])
+    @route('middleware', '/stats/topology', methods=['GET'])  # Backward compatibility
     def get_topology_stats(self, req, **kwargs):
         """Get topology metrics"""
         try:
@@ -500,6 +529,7 @@ class MiddlewareRestController(ControllerBase):
     # ========================================================================
 
     @route('middleware', '/v2.0/health', methods=['GET'])
+    @route('middleware', '/health', methods=['GET'])  # Backward compatibility
     def health_check(self, req, **kwargs):
         """Health check endpoint"""
         try:
@@ -524,6 +554,7 @@ class MiddlewareRestController(ControllerBase):
     # ========================================================================
 
     @route('middleware', '/v2.0/p4/switches', methods=['GET'])
+    @route('middleware', '/p4/switches', methods=['GET'])  # Backward compatibility
     def list_p4_switches(self, req, **kwargs):
         """List all P4Runtime switches"""
         try:
@@ -752,6 +783,7 @@ class MiddlewareRestController(ControllerBase):
             return self._create_error_response(str(e), 500, "DEREGISTRATION_ERROR")
 
     @route('middleware', '/v2.0/controllers/list', methods=['GET'])
+    @route('middleware', '/controllers/list', methods=['GET'])  # Backward compatibility
     def list_controllers(self, req, **kwargs):
         """List all registered controllers"""
         try:

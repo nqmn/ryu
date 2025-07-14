@@ -21,6 +21,10 @@ all middleware functionality including topology management, traffic generation,
 flow control, monitoring, and AI/ML integration.
 """
 
+# Apply eventlet monkey patching to fix threading compatibility
+import eventlet
+eventlet.monkey_patch(thread=True)
+
 import logging
 import asyncio
 from typing import Dict, Any, Optional
@@ -33,6 +37,8 @@ from ryu.controller.handler import set_ev_cls
 from ryu.ofproto import ofproto_v1_3
 from ryu.topology import switches
 from ryu.app.wsgi import WSGIApplication
+from ryu.app.simple_switch_13 import SimpleSwitch13
+from ryu.topology.event import EventHostAdd
 
 from .rest_api import MiddlewareRestController
 from .websocket_api import MiddlewareWebSocketController
@@ -44,11 +50,19 @@ from .ml_integration import MLIntegrationService
 from .utils import MiddlewareConfig
 from .sdn_backends import SwitchManager, SwitchType
 from .sdn_backends.openflow_controller import RyuController
-from .sdn_backends.p4runtime_controller import P4RuntimeController
 from .sdn_backends.controller_manager import ControllerManager
 from .events.event_stream import EventStream
 
 LOG = logging.getLogger(__name__)
+
+# Try to import P4Runtime controller, but make it optional
+try:
+    from .sdn_backends.p4runtime_controller import P4RuntimeController
+    P4_RUNTIME_AVAILABLE = True
+except ImportError as e:
+    LOG.warning(f"P4Runtime controller not available: {e}")
+    P4RuntimeController = None
+    P4_RUNTIME_AVAILABLE = False
 
 
 class MiddlewareAPI(app_manager.RyuApp):
@@ -73,6 +87,7 @@ class MiddlewareAPI(app_manager.RyuApp):
         'wsgi': WSGIApplication,
         'dpset': dpset.DPSet,
         'switches': switches.Switches,
+        'simple_switch': SimpleSwitch13,
     }
     
     def __init__(self, *args, **kwargs):
@@ -85,6 +100,10 @@ class MiddlewareAPI(app_manager.RyuApp):
         self.wsgi = kwargs['wsgi']
         self.dpset = kwargs['dpset']
         self.switches_context = kwargs['switches']
+        self.simple_switch = kwargs['simple_switch']
+        
+        # Initialize host tracking
+        self._init_hosts()
 
         # Initialize event stream (before other components)
         self._init_event_stream()
@@ -145,11 +164,13 @@ class MiddlewareAPI(app_manager.RyuApp):
 
             # Initialize P4Runtime controller backend
             p4runtime_config = self.config.sdn_backends.get('p4runtime', {})
-            if p4runtime_config.get('enabled', False):
+            if p4runtime_config.get('enabled', False) and P4_RUNTIME_AVAILABLE:
                 self.p4runtime_controller = P4RuntimeController(p4runtime_config)
                 self.p4runtime_controller.set_event_stream(self.event_stream)
                 self.switch_manager.register_backend(SwitchType.P4RUNTIME, self.p4runtime_controller)
                 LOG.info("P4Runtime backend registered with event stream")
+            elif p4runtime_config.get('enabled', False) and not P4_RUNTIME_AVAILABLE:
+                LOG.warning("P4Runtime backend requested but not available - skipping")
 
             LOG.info("SDN backends initialized")
 
@@ -292,42 +313,6 @@ class MiddlewareAPI(app_manager.RyuApp):
         # Also forward to monitoring service for backward compatibility
         self.monitoring.on_packet_in(ev)
 
-    def get_topology_info(self):
-        """Get comprehensive topology information from all backends"""
-        try:
-            topology_info = {
-                'openflow_switches': [],
-                'p4runtime_switches': [],
-                'total_switches': 0,
-                'backend_status': {}
-            }
-
-            # Get OpenFlow switches
-            if hasattr(self, 'openflow_controller') and self.openflow_controller.is_connected():
-                of_switches = asyncio.run(self.openflow_controller.list_switches())
-                topology_info['openflow_switches'] = [switch.__dict__ for switch in of_switches]
-                topology_info['backend_status']['openflow'] = 'connected'
-            else:
-                topology_info['backend_status']['openflow'] = 'disconnected'
-
-            # Get P4Runtime switches
-            if hasattr(self, 'p4runtime_controller') and self.p4runtime_controller.is_connected():
-                p4_switches = asyncio.run(self.p4runtime_controller.list_switches())
-                topology_info['p4runtime_switches'] = [switch.__dict__ for switch in p4_switches]
-                topology_info['backend_status']['p4runtime'] = 'connected'
-            else:
-                topology_info['backend_status']['p4runtime'] = 'disconnected'
-
-            topology_info['total_switches'] = (
-                len(topology_info['openflow_switches']) +
-                len(topology_info['p4runtime_switches'])
-            )
-
-            return topology_info
-
-        except Exception as e:
-            LOG.error(f"Failed to get topology info: {e}")
-            return {'error': str(e)}
 
     def get_switch_manager(self):
         """Get the switch manager instance"""
@@ -380,6 +365,41 @@ class MiddlewareAPI(app_manager.RyuApp):
         except Exception as e:
             LOG.error(f"Failed to get topology info: {e}")
             return {'error': str(e)}
+    
+    def _init_hosts(self):
+        """Initialize host tracking"""
+        self.hosts = {}
+        LOG.info("Host tracking initialized")
+    
+    @set_ev_cls(EventHostAdd, MAIN_DISPATCHER)
+    def host_add_handler(self, ev):
+        """Handle host discovery events"""
+        try:
+            host = ev.host
+            LOG.info(f"Host discovered: {host.mac} at {host.ipv4}")
+            
+            host_data = {
+                'mac': host.mac,
+                'ipv4': host.ipv4[0] if host.ipv4 else None,
+                'ipv6': host.ipv6[0] if host.ipv6 else None,
+                'port': {
+                    'dpid': host.port.dpid,
+                    'port_no': host.port.port_no,
+                    'name': host.port.name
+                } if host.port else None,
+                'timestamp': self.monitoring.get_current_timestamp() if hasattr(self, 'monitoring') else None
+            }
+            
+            self.hosts[host.mac] = host_data
+            
+            # Send event to event stream if available
+            if hasattr(self, 'event_stream'):
+                self.event_stream.emit('host_discovered', host_data)
+                
+            LOG.info(f"Host {host.mac} added to tracking, total hosts: {len(self.hosts)}")
+            
+        except Exception as e:
+            LOG.error(f"Failed to handle host add event: {e}")
     
     def get_stats_info(self, dpid: Optional[int] = None) -> Dict[str, Any]:
         """Get statistics information"""
