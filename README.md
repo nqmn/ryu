@@ -67,6 +67,28 @@ pip install -e .
 
 ```
 
+### Basic Installation (Bypass Ubuntu Safety Checks )
+
+```bash
+# Clone the repository
+git clone https://github.com/nqmn/ryu.git
+cd ryu
+
+# Upgrade pip and install the package
+pip install --upgrade pip --break-system-package
+
+# Install with Core Ryu only (default)
+pip install -e . --break-system-package
+
+# Add to PATH environment
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# Start Ryu with with simple switch
+ryu-manager ryu/app/simple_switch_13.py
+
+```
+
 ### Features Installation
 
 ```bash
