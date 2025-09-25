@@ -76,6 +76,44 @@ ryu-manager ryu/app/simple_switch_13.py
 
 ```
 
+### Fresh Installation on Ubuntu 24.04.3 (Bypass Ubuntu Safety Checks )
+
+```bash
+# Install mininet
+sudo apt install mininet -y
+
+# Install Git
+sudo apt install git -y
+
+# Install Python3, pip and its dependencies
+sudo apt install python3-pip
+
+# Clone the repository
+git clone https://github.com/nqmn/ryu.git
+cd ryu
+
+# Upgrade pip and install the package
+pip install --upgrade pip --break-system-package --ignore-installed
+
+# Install with Core Ryu only (default)
+pip install -e . --break-system-package --ignore-installed
+
+# Add to PATH environment
+echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+# Start Ryu with with simple switch
+ryu-manager ryu/app/simple_switch_13.py
+
+# Install Curl (Optional)
+sudo apt install curl
+
+# Test installation
+python3 test_full_deployment.py
+
+```
+
+
 ### Contact
 
 ✉️ If you found any issues, do reach me!
