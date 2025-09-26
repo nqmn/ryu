@@ -98,6 +98,9 @@ pip install --upgrade pip --break-system-package --ignore-installed
 # Install with Core Ryu only (default)
 pip install -e . --break-system-package --ignore-installed
 
+# Install with Core Ryu only (default) for sudo
+sudo pip install -e . --break-system-package --ignore-installed
+
 # Add to PATH environment
 echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
